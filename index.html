@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stammstrecke zwischen Laim und Stachus</title>
+
+  <!-- Model Viewer -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ---------- SIDEBAR ---------- */
+    .sidebar {
+      width: 220px;
+      background: #ffffff;
+      border-right: 2px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .sidebar h2 {
+      margin: 0 0 10px;
+      font-size: 1.3rem;
+      color: #000;
+      text-align: left;
+    }
+
+    .sidebar button {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: left;
+    }
+
+    .sidebar button:hover {
+      background: #444;
+    }
+
+    .sidebar button.active {
+      background: #666;
+    }
+
+    /* ---------- MAIN AREA ---------- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f6f8fa;
+      position: relative;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: calc(100vh - 70px);
+      background: white;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      height: 50px;
+      background: #fff;
+      border-top: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      gap: 15px;
+      font-size: 0.95rem;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+    }
+
+    footer img {
+      height: 28px;
+      width: auto;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .sidebar button {
+        flex: 1;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      model-viewer {
+        height: 70vh;
+      }
+
+      footer {
+        position: relative;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="sidebar">
+    <h2>Stammstrecke zwischen Laim und Stachus</h2>
+
+    <button class="active" onclick="switchModel('Luftbild.glb', this)">Luftbildkarte</button>
+    <button onclick="switchModel('DOK.glb', this)">Digitale Ortskarte</button>
+  </div>
+
+  <div class="main">
+    <model-viewer id="viewer" src="Luftbild.glb" camera-controls auto-rotate autoplay animation-loop></model-viewer>
+
+    <footer>
+      <img src="LDBV.png" alt="Behördenlogo">
+    </footer>
+  </div>
+
+<script>
+  const viewer = document.getElementById('viewer');
+
+  function switchModel(file, btn) {
+    viewer.src = file;
+    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  /* --- Animation automatisch starten --- */
+  viewer.addEventListener('load', () => {
+    if (viewer.availableAnimations.length > 0) {
+      viewer.animationName = viewer.availableAnimations[0];
+    }
+  });
+</script>
+
+</body>
+</html>
