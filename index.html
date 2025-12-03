@@ -1,310 +1,193 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Modell Betrachter</title>
-  <!-- Laden des model-viewer Skripts mit type="module" -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stammstrecke zwischen Laim und Stachus</title>
+
+  <!-- Model Viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
   <style>
     body {
       margin: 0;
-      position: relative;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ---------- SIDEBAR ---------- */
+    .sidebar {
+      width: 220px;
+      background: #ffffff;
+      border-right: 2px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .sidebar h2 {
+      margin: 0 0 10px;
+      font-size: 1.3rem;
+      color: #000;
+      text-align: left;
+    }
+
+    .sidebar button {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: left;
+    }
+
+    .sidebar button:hover {
+      background: #444;
+    }
+
+    .sidebar button.active {
+      background: #666;
+    }
+
+    /* ---------- MAIN AREA ---------- */
+    .main {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background-color: #f0f0f0;
-    }
-    #button-container {
-      margin: 10px;
-    }
-    #button-container button.selected {
-      background-color: beige;
-    }
-    .button-container button.selected {
-      background-color: beige;
-    }
-    model-viewer.single-viewer {
-      width: 100vw;
-      height: 90vh;
-      filter: brightness(1.3) contrast(1.1);
-    }
-    #viewer-container {
-      width: 100%;
-      height: 90vh;
-    }
-    #comparison-container {
-      display: flex;
-      width: 100%;
-      height: 90vh;
-    }
-    .comparison-viewer {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .comparison-viewer .button-container {
-      display: flex;
       justify-content: center;
-      margin: 5px;
+      background: #f6f8fa;
+      position: relative;
     }
-    .comparison-viewer .button-container button.selected {
-      background-color: beige;
-    }
-    model-viewer.compare-viewer {
+
+    model-viewer {
       width: 100%;
-      flex: 1;
-      filter: brightness(1.3) contrast(1.1);
+      height: calc(100vh - 70px);
+      background: white;
     }
-    #end-comparison-button {
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      height: 50px;
+      background: #fff;
+      border-top: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      gap: 15px;
+      font-size: 0.95rem;
       position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 10;
+      bottom: 0;
+      width: 100%;
     }
-    #sync-toggle {
-      position: absolute;
-      top: 50px;
-      right: 10px;
-      z-index: 10;
-      background-color: white;
-      padding: 5px;
-      border-radius: 5px;
+
+    footer img {
+      height: 28px;
+      width: auto;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .sidebar button {
+        flex: 1;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      model-viewer {
+        height: 70vh;
+      }
+
+      footer {
+        position: relative;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div id="button-container">
-    <!-- Buttons werden dynamisch generiert -->
+
+  <div class="sidebar">
+    <h2>Stammstrecke zwischen Laim und Stachus</h2>
+
+    <button class="active" onclick="switchModel('Luftbild.glb', this)">Luftbildkarte</button>
+    <button onclick="switchModel('DOK.glb', this)">Digitale Ortskarte</button>
   </div>
 
-  <div id="viewer-container">
-    <model-viewer id="model-viewer" class="single-viewer" src="1150.glb" alt="Ein 3D Modell" ar camera-controls
-    min-camera-orbit="auto auto auto" max-camera-orbit="auto auto auto" min-field-of-view="10deg"
-    max-field-of-view="45deg" exposure="0.6">
-    </model-viewer>
+  <div class="main">
+    <model-viewer id="viewer" src="Luftbild.glb" camera-controls auto-rotate></model-viewer>
+
+    <footer>
+      <img src="LDBV.png" alt="Behördenlogo">
+    </footer>
   </div>
 
-  <script>
-    let isComparing = false;
-    let syncCameras = false; // Variable zur Steuerung der Kamerasynchronisation
-    let selectedModelSingle = '1150.glb';
-    let selectedModelLeft = '1150.glb';
-    let selectedModelRight = '1175.glb';
+<script>
+  const viewer = document.getElementById('viewer');
 
-    const models = [
-      {year: '1150', file: '1150.glb'},
-      {year: '1175', file: '1175.glb'},
-      {year: '1374', file: '1374.glb'},
-      {year: '1550', file: '1550.glb'},
-      {year: '1630', file: '1630.glb'},
-      {year: '1830', file: '1830.glb'},
-      {year: '1936', file: '1936.glb'},
-      {year: '2023', file: '2023.glb'},
-    ];
+  function switchModel(file, btn) {
+    viewer.src = file;
+    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
 
-    // Buttons für die Einzelansicht generieren
-    generateModelButtonsSingle();
-
-    function generateModelButtonsSingle() {
-      const buttonContainer = document.getElementById('button-container');
-      let buttonsHTML = '';
-      models.forEach(model => {
-        buttonsHTML += `<button data-file="${model.file}" onclick="changeModel('${model.file}')">${model.year}</button>`;
-      });
-      buttonsHTML += `<button onclick="startComparison()">Vergleichen</button>`;
-      buttonContainer.innerHTML = buttonsHTML;
-
-      // Markieren des ausgewählten Modells
-      updateSelectedButtonSingle();
+  /* --- Animation automatisch starten --- */
+  viewer.addEventListener('load', () => {
+    if (viewer.availableAnimations.length > 0) {
+      viewer.animationName = viewer.availableAnimations[0];
     }
+  });
 
-    function changeModel(modelFile, side) {
-      if (isComparing) {
-        const modelViewerId = side === 'left' ? 'model-viewer-left' : 'model-viewer-right';
-        const modelViewer = document.getElementById(modelViewerId);
+  /* --- Vergleichs-Slider einfügen --- */
+  // Slider Wrapper über der rechten Ansicht
+  const sliderWrapper = document.createElement('div');
+  sliderWrapper.id = 'slider-wrapper';
+  sliderWrapper.style = 'position:absolute; top:0; left:0; width:50%; height:100%; overflow:hidden; pointer-events:none;';
+  const overlayViewer = document.createElement('model-viewer');
+  overlayViewer.id = 'model-viewer-right-overlay';
+  overlayViewer.className = 'compare-viewer';
+  overlayViewer.src = 'DOK.glb'; // Zweites Modell für Vergleich
+  overlayViewer.setAttribute('camera-controls', '');
+  overlayViewer.style.pointerEvents = 'none';
+  sliderWrapper.appendChild(overlayViewer);
+  document.querySelector('.main').appendChild(sliderWrapper);
 
-        // Kameraeinstellungen speichern
-        const cameraState = getCameraState(modelViewer);
+  // Schieberegler
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.id = 'compare-slider';
+  slider.min = 0;
+  slider.max = 100;
+  slider.value = 50; // Start bei Mitte
+  slider.style = 'position:absolute; top:0; left:50%; transform:translateX(-50%); height:100%; writing-mode:bt-lr; z-index:10; pointer-events:auto;';
+  document.querySelector('.main').appendChild(slider);
 
-        modelViewer.src = modelFile;
+  slider.addEventListener('input', () => {
+    const percent = slider.value;
+    sliderWrapper.style.width = percent + '%';
+    slider.style.left = percent + '%';
+  });
+</script>
 
-        // Aktualisieren des ausgewählten Modells
-        if (side === 'left') {
-          selectedModelLeft = modelFile;
-          updateSelectedButtonComparison('left');
-        } else {
-          selectedModelRight = modelFile;
-          updateSelectedButtonComparison('right');
-        }
-
-        // Warten, bis das Modell geladen ist
-        modelViewer.addEventListener('load', () => {
-          // Kameraeinstellungen anwenden
-          setCameraState(modelViewer, cameraState);
-        }, { once: true });
-      } else {
-        const modelViewer = document.getElementById('model-viewer');
-
-        // Kameraeinstellungen speichern
-        const cameraState = getCameraState(modelViewer);
-
-        modelViewer.src = modelFile;
-        selectedModelSingle = modelFile;
-        updateSelectedButtonSingle();
-
-        // Warten, bis das Modell geladen ist
-        modelViewer.addEventListener('load', () => {
-          // Kameraeinstellungen anwenden
-          setCameraState(modelViewer, cameraState);
-        }, { once: true });
-      }
-    }
-
-    function startComparison() {
-      isComparing = true;
-      document.getElementById('button-container').style.display = 'none';
-
-      const viewerContainer = document.getElementById('viewer-container');
-      viewerContainer.innerHTML = `
-        <div id="comparison-container">
-          <div class="comparison-viewer">
-            <div class="button-container" id="button-container-left">
-              <!-- Buttons für das linke Modell -->
-            </div>
-            <model-viewer id="model-viewer-left" class="compare-viewer" src="${selectedModelLeft}" alt="Ein 3D Modell" ar camera-controls
-            min-camera-orbit="auto auto auto" max-camera-orbit="auto auto auto" min-field-of-view="10deg" max-field-of-view="45deg" exposure="0.6">
-            </model-viewer>
-          </div>
-          <div class="comparison-viewer">
-            <div class="button-container" id="button-container-right">
-              <!-- Buttons für das rechte Modell -->
-            </div>
-            <model-viewer id="model-viewer-right" class="compare-viewer" src="${selectedModelRight}" alt="Ein 3D Modell" ar camera-controls
-            min-camera-orbit="auto auto auto" max-camera-orbit="auto auto auto" min-field-of-view="10deg" max-field-of-view="45deg" exposure="0.6">
-            </model-viewer>
-          </div>
-        </div>
-        <button id="end-comparison-button" onclick="endComparison()">Vergleich beenden</button>
-        <label id="sync-toggle">
-          <input type="checkbox" id="sync-checkbox" onchange="toggleSync(this.checked)"> Kameras synchronisieren
-        </label>
-      `;
-
-      generateModelButtons('left');
-      generateModelButtons('right');
-
-      // Event Listener für Kamerasynchronisation hinzufügen
-      const modelViewerLeft = document.getElementById('model-viewer-left');
-      const modelViewerRight = document.getElementById('model-viewer-right');
-
-      modelViewerLeft.addEventListener('camera-change', (event) => {
-        if (syncCameras && event.detail.source === 'user-interaction') {
-          syncCamera(modelViewerLeft, modelViewerRight);
-        }
-      });
-
-      modelViewerRight.addEventListener('camera-change', (event) => {
-        if (syncCameras && event.detail.source === 'user-interaction') {
-          syncCamera(modelViewerRight, modelViewerLeft);
-        }
-      });
-    }
-
-    function syncCamera(source, target) {
-      const cameraState = getCameraState(source);
-
-      // Kameraeinstellungen direkt anwenden
-      setCameraState(target, cameraState);
-    }
-
-    function getCameraState(modelViewer) {
-      return {
-        orbit: modelViewer.getCameraOrbit(),
-        target: modelViewer.getCameraTarget(),
-        fov: modelViewer.getFieldOfView()
-      };
-    }
-
-    function setCameraState(modelViewer, state) {
-      modelViewer.cameraOrbit = `${state.orbit.theta}rad ${state.orbit.phi}rad ${state.orbit.radius}m`;
-      modelViewer.cameraTarget = `${state.target.x}m ${state.target.y}m ${state.target.z}m`;
-      modelViewer.fieldOfView = `${state.fov}deg`;
-    }
-
-    function endComparison() {
-      isComparing = false;
-      syncCameras = false;
-      document.getElementById('button-container').style.display = 'block';
-
-      const viewerContainer = document.getElementById('viewer-container');
-      viewerContainer.innerHTML = `
-        <model-viewer id="model-viewer" class="single-viewer" src="${selectedModelSingle}" alt="Ein 3D Modell" ar camera-controls
-        min-camera-orbit="auto auto auto" max-camera-orbit="auto auto auto" min-field-of-view="10deg"
-        max-field-of-view="45deg" exposure="0.6">
-        </model-viewer>
-      `;
-
-      // Buttons neu generieren und markieren
-      generateModelButtonsSingle();
-    }
-
-    function generateModelButtons(side) {
-      const containerId = side === 'left' ? 'button-container-left' : 'button-container-right';
-      const buttonContainer = document.getElementById(containerId);
-      let buttonsHTML = '';
-      models.forEach(model => {
-        buttonsHTML += `<button data-file="${model.file}" onclick="changeModel('${model.file}', '${side}')">${model.year}</button>`;
-      });
-      buttonContainer.innerHTML = buttonsHTML;
-
-      // Markieren des ausgewählten Modells
-      updateSelectedButtonComparison(side);
-    }
-
-    function updateSelectedButtonSingle() {
-      const buttons = document.querySelectorAll('#button-container button[data-file]');
-      buttons.forEach(button => {
-        if (button.getAttribute('data-file') === selectedModelSingle) {
-          button.classList.add('selected');
-        } else {
-          button.classList.remove('selected');
-        }
-      });
-    }
-
-    function updateSelectedButtonComparison(side) {
-      const containerId = side === 'left' ? 'button-container-left' : 'button-container-right';
-      const selectedModel = side === 'left' ? selectedModelLeft : selectedModelRight;
-      const buttons = document.querySelectorAll(`#${containerId} button[data-file]`);
-      buttons.forEach(button => {
-        if (button.getAttribute('data-file') === selectedModel) {
-          button.classList.add('selected');
-        } else {
-          button.classList.remove('selected');
-        }
-      });
-    }
-
-    function toggleSync(isChecked) {
-      syncCameras = isChecked;
-
-      const modelViewerLeft = document.getElementById('model-viewer-left');
-      const modelViewerRight = document.getElementById('model-viewer-right');
-
-      if (syncCameras) {
-        // Benutzerinteraktion auf dem rechten Modell deaktivieren
-        modelViewerRight.setAttribute('interaction-prompt', 'none');
-        modelViewerLeft.setAttribute('interaction-prompt', 'none');
-
-        // Kameraeinstellungen synchronisieren
-        syncCamera(modelViewerLeft, modelViewerRight);
-      } else {
-        // Benutzerinteraktion auf dem rechten Modell wieder aktivieren
-        modelViewerRight.setAttribute('camera-controls', '');
-        modelViewerRight.removeAttribute('interaction-prompt');
-      }
-    }
-  </script>
 </body>
 </html>
