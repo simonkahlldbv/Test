@@ -1,193 +1,116 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stammstrecke zwischen Laim und Stachus</title>
+    /* ------------------------------
+       VISUELLER VERGLEICHS-SLIDER
+    ------------------------------ */
 
-  <!-- Model Viewer -->
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* ---------- SIDEBAR ---------- */
-    .sidebar {
-      width: 220px;
-      background: #ffffff;
-      border-right: 2px solid #ddd;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .sidebar h2 {
-      margin: 0 0 10px;
-      font-size: 1.3rem;
-      color: #000;
-      text-align: left;
-    }
-
-    .sidebar button {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: left;
-    }
-
-    .sidebar button:hover {
-      background: #444;
-    }
-
-    .sidebar button.active {
-      background: #666;
-    }
-
-    /* ---------- MAIN AREA ---------- */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f6f8fa;
-      position: relative;
-    }
-
-    model-viewer {
-      width: 100%;
-      height: calc(100vh - 70px);
-      background: white;
-    }
-
-    /* ---------- FOOTER ---------- */
-    footer {
-      height: 50px;
-      background: #fff;
-      border-top: 2px solid #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 20px;
-      gap: 15px;
-      font-size: 0.95rem;
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-    }
-
-    footer img {
-      height: 28px;
-      width: auto;
-    }
-
-    /* ---------- RESPONSIVE ---------- */
-    @media (max-width: 900px) {
-      body {
-        flex-direction: column;
-        overflow: auto;
-      }
-
-      .sidebar {
+    // Style für den Slider einfügen
+    const compareStyle = document.createElement("style");
+    compareStyle.innerHTML = `
+      #compare-slider-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 90vh;
         width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-        border-right: none;
-        border-bottom: 2px solid #ddd;
+        pointer-events: none;
+        display: none;
       }
 
-      .sidebar button {
-        flex: 1;
-        text-align: center;
-        white-space: nowrap;
+      #compare-slider-line {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: red;
+        pointer-events: auto;
+        cursor: ew-resize;
       }
 
-      model-viewer {
-        height: 70vh;
+      #comparison-left,
+      #comparison-right {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: auto;
       }
 
-      footer {
-        position: relative;
+      #comparison-left {
+        left: 0;
+        width: 50%;
       }
+
+      #comparison-right {
+        right: 0;
+        width: 50%;
+      }
+    `;
+    document.head.appendChild(compareStyle);
+
+    // Slider-HTML erzeugen
+    const compareOverlay = document.createElement("div");
+    compareOverlay.id = "compare-slider-wrapper";
+    compareOverlay.innerHTML = `
+      <div id="comparison-left"></div>
+      <div id="comparison-right"></div>
+      <div id="compare-slider-line"></div>
+    `;
+    document.body.appendChild(compareOverlay);
+
+    // Wenn Vergleich gestartet wird -> Slider aktivieren & Modelle einsortieren
+    const origStartComparison = startComparison;
+    startComparison = function() {
+      origStartComparison();
+
+      setTimeout(() => {
+        const wrapper = document.getElementById("compare-slider-wrapper");
+        wrapper.style.display = "block";
+
+        const leftContainer = document.getElementById("comparison-left");
+        const rightContainer = document.getElementById("comparison-right");
+
+        leftContainer.innerHTML = "";
+        rightContainer.innerHTML = "";
+
+        leftContainer.appendChild(document.getElementById("model-viewer-left"));
+        rightContainer.appendChild(document.getElementById("model-viewer-right"));
+
+      }, 100);
+    };
+
+    // Vergleich beenden -> Slider ausblenden
+    const origEndComparison = endComparison;
+    endComparison = function() {
+      document.getElementById("compare-slider-wrapper").style.display = "none";
+      origEndComparison();
+    };
+
+    // Slider-Bewegungslogik
+    const slider = document.getElementById("compare-slider-line");
+    let dragging = false;
+
+    slider.addEventListener("mousedown", () => dragging = true);
+    slider.addEventListener("touchstart", () => dragging = true);
+
+    window.addEventListener("mouseup", () => dragging = false);
+    window.addEventListener("touchend", () => dragging = false);
+
+    window.addEventListener("mousemove", moveSlider);
+    window.addEventListener("touchmove", moveSlider);
+
+    function moveSlider(e) {
+      if (!dragging) return;
+
+      let x = e.clientX;
+      if (e.touches) x = e.touches[0].clientX;
+
+      const wrapper = document.getElementById("compare-slider-wrapper");
+      const rect = wrapper.getBoundingClientRect();
+
+      let pos = x - rect.left;
+      pos = Math.max(50, Math.min(rect.width - 50, pos)); // Randbereich
+
+      slider.style.left = pos + "px";
+      document.getElementById("comparison-left").style.width = pos + "px";
+      document.getElementById("comparison-right").style.width = (rect.width - pos) + "px";
     }
-  </style>
-</head>
 
-<body>
-
-  <div class="sidebar">
-    <h2>Stammstrecke zwischen Laim und Stachus</h2>
-
-    <button class="active" onclick="switchModel('Luftbild.glb', this)">Luftbildkarte</button>
-    <button onclick="switchModel('DOK.glb', this)">Digitale Ortskarte</button>
-  </div>
-
-  <div class="main">
-    <model-viewer id="viewer" src="Luftbild.glb" camera-controls auto-rotate></model-viewer>
-
-    <footer>
-      <img src="LDBV.png" alt="Behördenlogo">
-    </footer>
-  </div>
-
-<script>
-  const viewer = document.getElementById('viewer');
-
-  function switchModel(file, btn) {
-    viewer.src = file;
-    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
-
-  /* --- Animation automatisch starten --- */
-  viewer.addEventListener('load', () => {
-    if (viewer.availableAnimations.length > 0) {
-      viewer.animationName = viewer.availableAnimations[0];
-    }
-  });
-
-  /* --- Vergleichs-Slider einfügen --- */
-  // Slider Wrapper über der rechten Ansicht
-  const sliderWrapper = document.createElement('div');
-  sliderWrapper.id = 'slider-wrapper';
-  sliderWrapper.style = 'position:absolute; top:0; left:0; width:50%; height:100%; overflow:hidden; pointer-events:none;';
-  const overlayViewer = document.createElement('model-viewer');
-  overlayViewer.id = 'model-viewer-right-overlay';
-  overlayViewer.className = 'compare-viewer';
-  overlayViewer.src = 'DOK.glb'; // Zweites Modell für Vergleich
-  overlayViewer.setAttribute('camera-controls', '');
-  overlayViewer.style.pointerEvents = 'none';
-  sliderWrapper.appendChild(overlayViewer);
-  document.querySelector('.main').appendChild(sliderWrapper);
-
-  // Schieberegler
-  const slider = document.createElement('input');
-  slider.type = 'range';
-  slider.id = 'compare-slider';
-  slider.min = 0;
-  slider.max = 100;
-  slider.value = 50; // Start bei Mitte
-  slider.style = 'position:absolute; top:0; left:50%; transform:translateX(-50%); height:100%; writing-mode:bt-lr; z-index:10; pointer-events:auto;';
-  document.querySelector('.main').appendChild(slider);
-
-  slider.addEventListener('input', () => {
-    const percent = slider.value;
-    sliderWrapper.style.width = percent + '%';
-    slider.style.left = percent + '%';
-  });
-</script>
-
-</body>
-</html>
